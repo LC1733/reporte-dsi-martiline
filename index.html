@@ -306,6 +306,18 @@
     color:#6b7280; text-align:center; padding:40px 20px; font-size:14px;
   }
 
+
+  /* ── SECCIONES T/T ── */
+  .tt-section { margin-bottom: 18px; }
+  .tt-section-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; padding: 8px 4px;
+    border-bottom: 2px solid rgba(0,0,0,.06);
+  }
+  .tt-section-icon { font-size: 18px; }
+  .tt-section-title { font-weight: 800; font-size: 14px; color: var(--ink); }
+  .tt-section-sub { font-size: 10px; color: var(--ink-muted); margin-left: auto; }
+
 </style>
 </head>
 <body>
@@ -350,22 +362,56 @@
     <div class="chart-card"><div class="chart-title">Tipo de Transporte</div><div class="bar-list" id="chart-tipo"></div></div>
   </div>
 
+  <div class="tt-section">
+    <div class="tt-section-head">
+      <span class="tt-section-icon">🚢</span>
+      <span class="tt-section-title">Tiempos de Tránsito — Marítimo</span>
+      <span class="tt-section-sub">Días promedio ETD → ETA · por operación</span>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Marítimo por País</div><div class="bar-list" id="chart-tt-mar-pais"></div></div>
+      <div class="chart-card"><div class="chart-title">Marítimo por Puerto de Embarque</div><div class="bar-list" id="chart-tt-mar-puerto"></div></div>
+    </div>
+  </div>
+
+  <div class="tt-section">
+    <div class="tt-section-head">
+      <span class="tt-section-icon">✈️</span>
+      <span class="tt-section-title">Tiempos de Tránsito — Aéreo</span>
+      <span class="tt-section-sub">Días promedio ETD → ETA · por operación</span>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="chart-title">Aéreo por País</div><div class="bar-list" id="chart-tt-air-pais"></div></div>
+      <div class="chart-card"><div class="chart-title">Aéreo por Origen</div><div class="bar-list" id="chart-tt-air-puerto"></div></div>
+    </div>
+  </div>
+
   <div class="filters">
-    <div class="filter-group"><span class="filter-label">Buscar</span>
-      <input type="text" id="search" placeholder="Orden DSI, Ref., Contenedor, Proveedor..."></div>
+    <div class="filter-group"><span class="filter-label">Orden DSI</span>
+      <input type="text" id="search-orden" placeholder="Buscar orden..."></div>
+    <div class="filter-group"><span class="filter-label">Contenedor</span>
+      <input type="text" id="search-cont" placeholder="Buscar contenedor..."></div>
+    <div class="filter-group"><span class="filter-label">DAM</span>
+      <input type="text" id="search-dam" placeholder="Buscar DAM..."></div>
+    <div class="filter-group"><span class="filter-label">Buscar (general)</span>
+      <input type="text" id="search" placeholder="Ref., proveedor, detalle..."></div>
     <div class="filter-group"><span class="filter-label">Estatus</span>
       <select id="sel-estatus"><option value="">Todos</option></select></div>
     <div class="filter-group"><span class="filter-label">Origen</span>
       <select id="sel-origen"><option value="">Todos</option></select></div>
     <div class="filter-group"><span class="filter-label">Tipo</span>
       <select id="sel-tipo"><option value="">Todos</option><option value="FCL">FCL</option><option value="AEREO">Aéreo</option><option value="LCL">LCL</option></select></div>
+    <div class="filter-group"><span class="filter-label">Año</span>
+      <select id="sel-anio"><option value="">Todos</option></select></div>
+    <div class="filter-group"><span class="filter-label">Mes</span>
+      <select id="sel-mes"><option value="">Todos</option></select></div>
     <button class="btn-clear" onclick="clearFilters()">✕ Limpiar</button>
     <div class="result-count"><strong id="result-num">130</strong> operaciones · <span id="result-conts" style="color:var(--ink-muted)">280 cont.</span></div>
     <button class="btn-export" onclick="exportExcel()">⬇ Exportar Excel</button>
   </div>
 
   <div class="table-wrap">
-    <div class="section-header"><span class="section-title">Detalle de Operaciones</span></div>
+    <div class="section-header"><span class="section-title">Detalle de Operaciones</span><span style="font-size:10px;color:var(--ink-muted);font-weight:400">Impuestos en soles (S/) aprox. · valor real según tipo de cambio SUNAT del día</span></div>
     <div class="table-scroll">
       <table>
         <thead><tr>
@@ -388,6 +434,9 @@
             <th onclick="sortBy('ultimo_dia_libre')" style="min-width:82px" data-col="ultimo_dia_libre">Últ. Día Libre <span class="si">⇅</span></th>
             <th onclick="sortBy('detalle_factura')" style="min-width:110px" data-col="detalle_factura">Detalle <span class="si">⇅</span></th>
             <th onclick="sortBy('observaciones')" style="min-width:150px" data-col="observaciones">Observaciones <span class="si">⇅</span></th>
+            <th onclick="sortBy('impuestos_usd')" style="min-width:95px" data-col="impuestos_usd">Impuestos USD <span class="si">⇅</span></th>
+            <th onclick="sortBy('impuestos_pen')" style="min-width:95px" data-col="impuestos_pen">Impuestos S/ <span class="si">⇅</span></th>
+            <th onclick="sortBy('dam')" style="min-width:110px" data-col="dam">DAM <span class="si">⇅</span></th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -431,6 +480,7 @@ const RAW = [{"orden_dsi": "C-PED-06141-D", "ref_martiline": "SHP00044851", "cli
 
 
 const COLORS = ['#f97316','#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#be185d'];
+var MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 // ── AGRUPACIÓN POR OPERACIÓN ──
 // Una operación agrupa contenedores que comparten HBL válido (padre + hijos).
@@ -488,29 +538,49 @@ document.getElementById('tabs').addEventListener('click', function(e) {
   applyFilters();
 });
 
-['search','sel-estatus','sel-origen','sel-tipo'].forEach(function(id) {
+['search','search-orden','search-cont','search-dam','sel-estatus','sel-origen','sel-tipo','sel-anio','sel-mes'].forEach(function(id) {
   document.getElementById(id).addEventListener('input', function(){ page=1; applyFilters(); });
 });
 
 function clearFilters() {
   document.getElementById('search').value = '';
+  document.getElementById('search-orden').value = '';
+  document.getElementById('search-cont').value = '';
+  document.getElementById('search-dam').value = '';
   document.getElementById('sel-estatus').value = '';
   document.getElementById('sel-origen').value = '';
   document.getElementById('sel-tipo').value = '';
+  document.getElementById('sel-anio').value = '';
+  document.getElementById('sel-mes').value = '';
   page = 1; applyFilters();
 }
 
 function populateSelects() {
   var seenE = {}, seenO = {}, estatuses = [], origenes = [];
+  var anios = {}, meses = {};
   RAW.forEach(function(r) {
     if (r.estatus && !seenE[r.estatus]) { seenE[r.estatus]=1; estatuses.push(r.estatus); }
     if (r.origen && !seenO[r.origen]) { seenO[r.origen]=1; origenes.push(r.origen); }
+    // Año y mes desde ETD
+    var d = parseDMY(r.etd);
+    if (d) { anios[d.getFullYear()] = 1; meses[d.getMonth()] = 1; }
   });
   estatuses.sort(); origenes.sort();
   var selE = document.getElementById('sel-estatus');
   var selO = document.getElementById('sel-origen');
   estatuses.forEach(function(e) { var o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
   origenes.forEach(function(o) { var opt=document.createElement('option'); opt.value=o; opt.textContent=o; selO.appendChild(opt); });
+
+  // Poblar Año (descendente)
+  var selA = document.getElementById('sel-anio');
+  Object.keys(anios).map(Number).sort(function(a,b){return b-a;}).forEach(function(y) {
+    var o=document.createElement('option'); o.value=y; o.textContent=y; selA.appendChild(o);
+  });
+  // Poblar Mes (orden natural, solo los presentes)
+  var selM = document.getElementById('sel-mes');
+  Object.keys(meses).map(Number).sort(function(a,b){return a-b;}).forEach(function(m) {
+    var o=document.createElement('option'); o.value=m; o.textContent=MESES_NOM[m]; selM.appendChild(o);
+  });
 }
 
 function getTipo(r) {
@@ -523,9 +593,14 @@ function getTipo(r) {
 
 function applyFilters() {
   var q = document.getElementById('search').value.toLowerCase().trim();
+  var qOrden = document.getElementById('search-orden').value.toLowerCase().trim();
+  var qCont = document.getElementById('search-cont').value.toLowerCase().trim();
+  var qDam = document.getElementById('search-dam').value.toLowerCase().trim();
   var est = document.getElementById('sel-estatus').value;
   var orig = document.getElementById('sel-origen').value;
   var tipo = document.getElementById('sel-tipo').value;
+  var anio = document.getElementById('sel-anio').value;
+  var mes = document.getElementById('sel-mes').value;
 
   // 1) Agrupar TODO en operaciones
   var todasOps = groupOperations(RAW);
@@ -539,10 +614,31 @@ function applyFilters() {
     if (est && r.estatus !== est) return false;
     if (orig && r.origen !== orig) return false;
     if (tipo && getTipo(r) !== tipo) return false;
+    if (anio || mes) {
+      var d = parseDMY(r.etd);
+      if (!d) return false;
+      if (anio && d.getFullYear() !== +anio) return false;
+      if (mes !== '' && d.getMonth() !== +mes) return false;
+    }
+    // Buscador Orden DSI (en cualquier contenedor de la operación)
+    if (qOrden) {
+      var mOrden = op.registros.some(function(x){ return (x.orden_dsi||'').toLowerCase().indexOf(qOrden) >= 0; });
+      if (!mOrden) return false;
+    }
+    // Buscador Contenedor
+    if (qCont) {
+      var mCont = op.registros.some(function(x){ return (x.contenedor||'').toLowerCase().indexOf(qCont) >= 0; });
+      if (!mCont) return false;
+    }
+    // Buscador DAM
+    if (qDam) {
+      var mDam = op.registros.some(function(x){ return (x.dam||'').toLowerCase().indexOf(qDam) >= 0; });
+      if (!mDam) return false;
+    }
+    // Buscador general (ref, proveedor, detalle, observaciones, hbl)
     if (q) {
-      // Buscar en cualquier contenedor de la operación
       var match = op.registros.some(function(x) {
-        var hay = [x.orden_dsi,x.ref_martiline,x.contenedor,x.hbl,x.proveedor,x.detalle_factura,x.observaciones].join(' ').toLowerCase();
+        var hay = [x.ref_martiline,x.hbl,x.proveedor,x.detalle_factura,x.observaciones].join(' ').toLowerCase();
         return hay.indexOf(q) >= 0;
       });
       if (!match) return false;
@@ -562,7 +658,7 @@ function applyFilters() {
 }
 
 function renderAll() {
-  renderKPIs(); renderCharts(); renderTable(); renderPagination();
+  renderKPIs(); renderCharts(); renderTT(); renderTable(); renderPagination();
   // Operaciones vs contenedores en el contador
   var opsCount = groupOperations(filteredData).length;
   document.getElementById('result-num').textContent = opsCount;
@@ -661,6 +757,62 @@ function demTag(r) {
 
 
 
+
+// ── T/T PROMEDIO (tiempo de tránsito) ──
+function esAereoTT(r) {
+  var c = (r.cantidad || '').toUpperCase();
+  return c.indexOf('AEREO') >= 0 || c.indexOf('A\u00C9REO') >= 0;
+}
+
+function calcTT(reps, campoAgrupar, quiereAereo) {
+  var mapa = {};
+  reps.forEach(function(r) {
+    if (esAereoTT(r) !== quiereAereo) return; // separar aéreo de marítimo
+    var etd = parseDMY(r.etd), eta = parseDMY(r.eta);
+    if (etd && eta) {
+      var tt = Math.round((eta - etd) / 86400000);
+      if (tt > 0) {
+        var clave = r[campoAgrupar] || '?';
+        (mapa[clave] = mapa[clave] || []).push(tt);
+      }
+    }
+  });
+  return mapa;
+}
+
+function pintarTT(elId, mapa, colorOffset, minOps) {
+  var arr = Object.entries(mapa).map(function(kv) {
+    var vals = kv[1];
+    return [kv[0], Math.round(vals.reduce(function(a,b){return a+b;},0) / vals.length), vals.length];
+  }).filter(function(kv){ return kv[2] >= (minOps || 1); })
+    .sort(function(a,b){ return b[1]-a[1]; }).slice(0, 8);
+  var max = arr.length ? arr[0][1] : 1;
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = arr.length
+    ? arr.map(function(kv,i){
+        return '<div class="bar-item"><div class="bar-header"><span class="bar-label">'+kv[0]+' <span style="color:var(--ink-muted);font-size:9px">('+kv[2]+' op)</span></span><span class="bar-val">'+kv[1]+'d</span></div><div class="bar-track"><div class="bar-fill" style="width:'+((kv[1]/max)*100).toFixed(1)+'%;background:'+COLORS[(i+colorOffset)%8]+'"></div></div></div>';
+      }).join('')
+    : '<div style="color:var(--ink-muted);font-size:11px;padding:12px">Sin datos en el filtro actual</div>';
+}
+
+function renderTT() {
+  var reps = groupOperations(filteredData).map(function(o){ return o.rep; });
+  // Marítimo (quiereAereo = false)
+  pintarTT('chart-tt-mar-pais',   calcTT(reps, 'origen', false), 0, 1);
+  pintarTT('chart-tt-mar-puerto', calcTT(reps, 'pto_embarque', false), 3, 1);
+  // Aéreo (quiereAereo = true)
+  pintarTT('chart-tt-air-pais',   calcTT(reps, 'origen', true), 5, 1);
+  pintarTT('chart-tt-air-puerto', calcTT(reps, 'pto_embarque', true), 6, 1);
+}
+
+function fmtMoney(val, prefijo) {
+  if (val === null || val === undefined || val === '') return '&#8212;';
+  var n = Number(val);
+  if (isNaN(n) || n === 0) return '&#8212;';
+  return prefijo + ' ' + n.toLocaleString('es-CL', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
 function renderTable() {
   var start = (page-1)*PER_PAGE;
   var slice = filteredData.slice(start, start+PER_PAGE);
@@ -685,6 +837,9 @@ function renderTable() {
       '<td>'+(r.ultimo_dia_libre||'&#8212;')+'</td>'+
       '<td class="wrap">'+(r.detalle_factura||'&#8212;')+'</td>'+
       '<td class="wrap" title="'+(r.observaciones||'')+'">'+(r.observaciones||'&#8212;')+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums">'+fmtMoney(r.impuestos_usd,'US$')+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums">'+fmtMoney(r.impuestos_pen,'S/')+'</td>'+
+      '<td style="font-family:monospace;font-size:9px">'+(r.dam||'&#8212;')+'</td>'+
       '</tr>';
   }).join('');
 }
